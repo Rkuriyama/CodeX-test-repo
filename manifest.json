@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "LaTeX Variable Auditor",
+  "description": "Extracts LaTeX variables from webpages, builds a quantity table, and flags conflicts.",
+  "version": "1.0.0",
+  "action": {
+    "default_title": "LaTeX Variable Auditor"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

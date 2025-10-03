@@ -6,6 +6,12 @@
     'displaystyle', 'qquad', 'quad', 'smallskip', 'bigskip'
   ]);
 
+  const MATH_ENVIRONMENTS = new Set([
+    'equation', 'align', 'aligned', 'alignat', 'alignedat', 'gather', 'gathered',
+    'multline', 'eqnarray', 'flalign', 'cases', 'split', 'matrix', 'pmatrix',
+    'bmatrix', 'vmatrix', 'Vmatrix', 'smallmatrix', 'array'
+  ]);
+
   const state = {
     lastConflictCount: 0,
     initialized: false,
@@ -43,6 +49,9 @@
 
     header.append(title, refreshButton);
 
+    const content = document.createElement('div');
+    content.className = 'cx-popup__content';
+
     const cautionArea = document.createElement('div');
     cautionArea.className = 'cx-caution-area';
 
@@ -66,7 +75,9 @@
 
     table.append(thead, tbody);
 
-    popup.append(header, cautionArea, statusArea, table);
+    content.append(cautionArea, statusArea, table);
+
+    popup.append(header, content);
 
     toggleButton.addEventListener('click', () => {
       popup.classList.toggle('cx-popup-hidden');
@@ -115,6 +126,7 @@
     const displayRegex = /\$\$([\s\S]+?)\$\$/g;
     const bracketRegex = /\\\[([\s\S]+?)\\\]/g;
     const parenRegex = /\\\(([\s\S]+?)\\\)/g;
+    const environmentRegex = /\\begin\{([a-zA-Z*]+)\}([\s\S]+?)\\end\{\1\}/g;
 
     let node;
     while ((node = walker.nextNode())) {
@@ -129,6 +141,7 @@
       collectFromText(node, text, displayRegex, expressions);
       collectFromText(node, text, bracketRegex, expressions);
       collectFromText(node, text, parenRegex, expressions);
+      collectFromEnvironmentText(node, text, environmentRegex, expressions);
     }
 
     const scriptNodes = document.querySelectorAll('script[type^="math/tex"], script[type^="math/LaTeX"]');
@@ -174,8 +187,41 @@
     }
   }
 
-  function buildSnippet(before, latex, after) {
-    const raw = `${before || ''}$${latex}$${after || ''}`
+  function collectFromEnvironmentText(node, text, regex, target) {
+    regex.lastIndex = 0;
+    let match;
+    while ((match = regex.exec(text))) {
+      const environmentName = match[1];
+      if (!environmentName) {
+        continue;
+      }
+      const normalizedEnvironment = environmentName.replace(/\*$/, '');
+      if (!MATH_ENVIRONMENTS.has(normalizedEnvironment)) {
+        continue;
+      }
+      const body = match[2];
+      if (!body) {
+        continue;
+      }
+      const start = match.index;
+      const end = start + match[0].length;
+      const contextBefore = text.slice(Math.max(0, start - 80), start);
+      const contextAfter = text.slice(end, Math.min(text.length, end + 120));
+      target.push({
+        latex: body,
+        contextBefore,
+        contextAfter,
+        snippet: buildSnippet(contextBefore, match[0], contextAfter, { wrapWithMathDelimiters: false }),
+        element: node.parentElement || document.body
+      });
+    }
+  }
+
+  function buildSnippet(before, latex, after, options = {}) {
+    const { wrapWithMathDelimiters = true } = options;
+    const prefix = wrapWithMathDelimiters ? '$' : '';
+    const suffix = wrapWithMathDelimiters ? '$' : '';
+    const raw = `${before || ''}${prefix}${latex}${suffix}${after || ''}`
       .replace(/\s+/g, ' ')
       .trim();
     return raw.length > 160 ? `${raw.slice(0, 157)}…` : raw;

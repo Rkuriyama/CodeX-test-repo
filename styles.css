@@ -39,6 +39,12 @@
   display: none;
 }
 
+.cx-popup__content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-bottom: 0.75rem;
+}
+
 .cx-popup__header {
   display: flex;
   align-items: center;
@@ -109,10 +115,6 @@
   border-bottom: 1px solid #e2e8f0;
   vertical-align: top;
   text-align: left;
-}
-
-.cx-variable-table tbody {
-  overflow-y: auto;
 }
 
 .cx-conflict-cell {

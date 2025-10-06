@@ -4,20 +4,24 @@ const resetBtn = document.getElementById("reset");
 resetBtn.addEventListener("click", async () => {
   const confirmed = confirm("Reset all lookup counts? This cannot be undone.");
   if (!confirmed) return;
-  await chrome.storage.local.set({ lookupCounts: {} });
+  await chrome.storage.local.set({ lookupCounts: {}, lookupRecords: {} });
   renderLeaderboard({});
 });
 
 (async function init() {
-  const { lookupCounts = {} } = await chrome.storage.local.get("lookupCounts");
-  renderLeaderboard(lookupCounts);
+  const { lookupRecords = {}, lookupCounts = {} } = await chrome.storage.local.get([
+    "lookupRecords",
+    "lookupCounts",
+  ]);
+  const normalizedRecords = normalizeRecords(lookupRecords, lookupCounts);
+  renderLeaderboard(normalizedRecords);
 })();
 
-function renderLeaderboard(counts) {
+function renderLeaderboard(records) {
   leaderboardEl.innerHTML = "";
-  const entries = Object.entries(counts)
-    .filter(([, value]) => typeof value === "number" && value > 0)
-    .sort((a, b) => b[1] - a[1]);
+  const entries = Object.entries(records)
+    .filter(([, value]) => value && typeof value.count === "number" && value.count > 0)
+    .sort((a, b) => b[1].count - a[1].count);
 
   if (!entries.length) {
     leaderboardEl.classList.add("empty");
@@ -26,8 +30,8 @@ function renderLeaderboard(counts) {
 
   leaderboardEl.classList.remove("empty");
 
-  const topCount = entries[0][1];
-  entries.forEach(([word, count], index) => {
+  const topCount = entries[0][1].count;
+  entries.forEach(([word, data], index) => {
     const card = document.createElement("article");
     card.className = "card";
 
@@ -42,19 +46,19 @@ function renderLeaderboard(counts) {
     title.textContent = word;
 
     const subtitle = document.createElement("p");
-    subtitle.textContent = generateSubtitle(count);
+    subtitle.textContent = formatDefinition(data.definition);
 
     info.append(title, subtitle);
 
     const pill = document.createElement("span");
     pill.className = "count-pill";
-    pill.textContent = `${count} encounter${count > 1 ? "s" : ""}`;
+    pill.textContent = `${data.count} encounter${data.count > 1 ? "s" : ""}`;
 
     const progress = document.createElement("div");
     progress.className = "progress";
 
     const bar = document.createElement("span");
-    bar.style.width = `${Math.max(12, (count / topCount) * 100)}%`;
+    bar.style.width = `${Math.max(12, (data.count / topCount) * 100)}%`;
     progress.appendChild(bar);
 
     card.append(medal, info, pill, progress);
@@ -62,9 +66,37 @@ function renderLeaderboard(counts) {
   });
 }
 
-function generateSubtitle(count) {
-  if (count >= 15) return "You're mastering this word!";
-  if (count >= 8) return "Keep reviewing to make it stick.";
-  if (count >= 4) return "Repetition builds confidence.";
-  return "A new discovery awaits more practice.";
+function normalizeRecords(recordMap = {}, countMap = {}) {
+  const merged = {};
+  const words = new Set([
+    ...Object.keys(countMap || {}),
+    ...Object.keys(recordMap || {}),
+  ]);
+
+  words.forEach((word) => {
+    const record = recordMap[word] || {};
+    const countFromRecord =
+      typeof record.count === "number" ? record.count : undefined;
+    const countFromMap = typeof countMap[word] === "number" ? countMap[word] : 0;
+    const count = countFromRecord ?? countFromMap;
+
+    if (!count || count <= 0) return;
+
+    merged[word] = {
+      count,
+      definition: typeof record.definition === "string" ? record.definition : "",
+    };
+  });
+
+  return merged;
+}
+
+function formatDefinition(definition) {
+  if (!definition) {
+    return "Definition not saved yet. Look it up again to record the meaning.";
+  }
+  if (definition.length <= 160) {
+    return definition;
+  }
+  return `${definition.slice(0, 157)}…`;
 }

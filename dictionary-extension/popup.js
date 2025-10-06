@@ -1,43 +1,54 @@
 const resultsEl = document.getElementById("results");
 const statusEl = document.getElementById("status");
 const statsBtn = document.getElementById("open-stats");
+const lookupBtn = document.getElementById("lookup-btn");
 
 statsBtn.addEventListener("click", async () => {
   const url = chrome.runtime.getURL("stats.html");
   await chrome.tabs.create({ url });
 });
 
-document.addEventListener("DOMContentLoaded", async () => {
-  statusEl.textContent = "Fetching selected text...";
-  const word = await getSelectedWord();
+document.addEventListener("DOMContentLoaded", () => {
+  lookupBtn.addEventListener("click", handleLookupClick);
+  statusEl.textContent = "Ready when you are. Highlight a word and press Lookup.";
+});
 
-  if (!word) {
-    renderPlaceholder(
-      "No word detected. Highlight a single English word and reopen the extension."
-    );
-    statusEl.textContent = "";
-    return;
-  }
-
-  statusEl.textContent = `Looking up \"${word}\"...`;
+async function handleLookupClick() {
+  lookupBtn.disabled = true;
+  statusEl.textContent = "Checking the selected text...";
 
   try {
+    const word = await getSelectedWord();
+
+    if (!word) {
+      renderPlaceholder(
+        "No word detected. Highlight a single English word and press the lookup button again."
+      );
+      statusEl.textContent = "";
+      return;
+    }
+
+    statusEl.textContent = `Looking up \"${word}\"...`;
+
     const data = await fetchDefinition(word);
     if (!data || !data.length) {
       throw new Error("No definitions returned");
     }
 
-    const lookupCount = await bumpLookupCount(word);
-    renderDefinitions(word, lookupCount, data);
-    statusEl.textContent = "Tap the Rankings button to review your most encountered words.";
+    const record = await updateLookupRecord(word, data);
+    renderDefinitions(word, record.count, data);
+    statusEl.textContent =
+      "Tap the Rankings button to review your most encountered words.";
   } catch (error) {
     console.error(error);
     renderPlaceholder(
       "We couldn't find a definition for that selection. Try another English word."
     );
     statusEl.textContent = "";
+  } finally {
+    lookupBtn.disabled = false;
   }
-});
+}
 
 async function getSelectedWord() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -65,16 +76,38 @@ async function fetchDefinition(word) {
   return response.json();
 }
 
-async function bumpLookupCount(word) {
-  const { lookupCounts = {} } = await chrome.storage.local.get("lookupCounts");
-  const nextValue = (lookupCounts[word] || 0) + 1;
+async function updateLookupRecord(word, entries) {
+  const { lookupRecords = {}, lookupCounts = {} } = await chrome.storage.local.get([
+    "lookupRecords",
+    "lookupCounts",
+  ]);
+
+  const previousRecord = lookupRecords[word] || {};
+  const previousCount =
+    typeof previousRecord.count === "number"
+      ? previousRecord.count
+      : typeof lookupCounts[word] === "number"
+      ? lookupCounts[word]
+      : 0;
+
+  const definition = extractPrimaryDefinition(entries);
+  const nextRecord = {
+    count: previousCount + 1,
+    definition: definition || previousRecord.definition || "",
+  };
+
   await chrome.storage.local.set({
+    lookupRecords: {
+      ...lookupRecords,
+      [word]: nextRecord,
+    },
     lookupCounts: {
       ...lookupCounts,
-      [word]: nextValue,
+      [word]: nextRecord.count,
     },
   });
-  return nextValue;
+
+  return nextRecord;
 }
 
 function renderDefinitions(word, lookupCount, entries) {
@@ -142,4 +175,17 @@ function renderDefinitions(word, lookupCount, entries) {
 
 function renderPlaceholder(message) {
   resultsEl.innerHTML = `<div class="placeholder">${message}</div>`;
+}
+
+function extractPrimaryDefinition(entries) {
+  for (const entry of entries || []) {
+    for (const meaning of entry.meanings || []) {
+      for (const definition of meaning.definitions || []) {
+        if (definition?.definition) {
+          return definition.definition;
+        }
+      }
+    }
+  }
+  return "";
 }

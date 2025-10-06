@@ -37,6 +37,11 @@ body {
   letter-spacing: 0.03em;
 }
 
+.header .actions {
+  display: flex;
+  gap: 10px;
+}
+
 .header button {
   display: inline-flex;
   align-items: center;
@@ -55,6 +60,14 @@ body {
 .header button:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 22px rgba(37, 99, 235, 0.45);
+}
+
+.header button:disabled,
+.header button:disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
 }
 
 .results {

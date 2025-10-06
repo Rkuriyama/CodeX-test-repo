@@ -8,14 +8,21 @@
   <body>
     <header class="header">
       <h1>Word Insight</h1>
-      <button id="open-stats" title="View lookup rankings">
-        <span class="icon">📊</span>
-        Rankings
-      </button>
+      <div class="actions">
+        <button id="lookup-btn" class="lookup-btn" title="Lookup the selected word">
+          <span class="icon">🔍</span>
+          Lookup selection
+        </button>
+        <button id="open-stats" title="View lookup rankings">
+          <span class="icon">📊</span>
+          Rankings
+        </button>
+      </div>
     </header>
     <main id="results" class="results">
       <div class="placeholder">
-        Select a word on the current tab and then open the extension to see its meaning.
+        Select a word on the current tab and click <strong>Lookup selection</strong> to
+        fetch its meaning.
       </div>
     </main>
     <footer class="footer">

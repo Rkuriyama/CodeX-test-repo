@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>English Learner Dictionary</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>Word Insight</h1>
+      <div class="actions">
+        <button id="lookup-btn" class="lookup-btn" title="Lookup the selected word">
+          <span class="icon">🔍</span>
+          Lookup selection
+        </button>
+        <button id="open-stats" title="View lookup rankings">
+          <span class="icon">📊</span>
+          Rankings
+        </button>
+      </div>
+    </header>
+    <main id="results" class="results">
+      <div class="placeholder">
+        Select a word on the current tab and click <strong>Lookup selection</strong> to
+        fetch its meaning.
+      </div>
+    </main>
+    <footer class="footer">
+      <span class="status" id="status"></span>
+    </footer>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

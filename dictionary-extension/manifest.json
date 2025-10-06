@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "English Learner Dictionary",
+  "version": "1.0.0",
+  "description": "Look up selected English words and track encounter frequency for English learners.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://api.dictionaryapi.dev/*"],
+  "action": {
+    "default_title": "English Learner Dictionary",
+    "default_popup": "popup.html"
+  }
+}

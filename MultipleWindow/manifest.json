@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Multi Column Viewer",
+  "description": "View multiple URLs side by side in independently navigable columns.",
+  "version": "1.0.0",
+  "action": {
+    "default_title": "Open Multi Column Viewer"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["storage", "tabs"]
+}

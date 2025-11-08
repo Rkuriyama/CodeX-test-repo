@@ -38,7 +38,23 @@
             <button type="button" class="icon-button remove-column" title="列を削除">✕</button>
           </div>
         </header>
-        <iframe class="column-frame" sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock allow-popups allow-modals allow-downloads"></iframe>
+        <div class="frame-container">
+          <iframe
+            is="x-frame-bypass"
+            class="column-frame"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock allow-popups allow-modals allow-downloads"
+          ></iframe>
+          <div class="frame-overlay" hidden>
+            <div class="overlay-content">
+              <h2 class="overlay-title">読み込み中...</h2>
+              <p class="overlay-message">ページを読み込んでいます。</p>
+              <p class="overlay-detail" hidden></p>
+              <div class="overlay-actions" hidden>
+                <button type="button" class="secondary-button overlay-action">新しいタブで開く</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </template>
     <script type="module" src="dashboard.js"></script>

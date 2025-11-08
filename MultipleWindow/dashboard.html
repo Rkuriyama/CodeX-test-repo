@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi Column Viewer</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1 class="app-title">Multiple Window Columns</h1>
+      <form id="add-column-form" class="add-column-form">
+        <label class="form-field">
+          <span class="label-text">URL</span>
+          <input type="url" id="url-input" placeholder="https://example.com" required />
+        </label>
+        <label class="form-field">
+          <span class="label-text">幅 (%)</span>
+          <input type="number" id="width-input" min="10" max="100" value="30" />
+        </label>
+        <button type="submit" class="primary-button">列を追加</button>
+      </form>
+    </header>
+    <main id="columns" class="columns" role="list"></main>
+    <template id="column-template">
+      <section class="column" role="listitem">
+        <header class="column-header">
+          <form class="navigation-form">
+            <input type="url" class="address-input" required />
+            <button type="submit" class="secondary-button">移動</button>
+          </form>
+          <div class="column-controls">
+            <label class="width-control">
+              <span>幅:</span>
+              <input type="range" min="10" max="100" value="30" class="width-slider" />
+              <span class="width-value">30%</span>
+            </label>
+            <button type="button" class="icon-button remove-column" title="列を削除">✕</button>
+          </div>
+        </header>
+        <div class="frame-container">
+          <iframe
+            is="x-frame-bypass"
+            class="column-frame"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-pointer-lock allow-popups allow-modals allow-downloads"
+          ></iframe>
+          <div class="frame-overlay" hidden>
+            <div class="overlay-content">
+              <h2 class="overlay-title">読み込み中...</h2>
+              <p class="overlay-message">ページを読み込んでいます。</p>
+              <p class="overlay-detail" hidden></p>
+              <div class="overlay-actions" hidden>
+                <button type="button" class="secondary-button overlay-action">新しいタブで開く</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>
